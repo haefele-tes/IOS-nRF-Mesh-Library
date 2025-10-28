@@ -158,7 +158,7 @@ public struct NetworkLayer {
                 micSize = 4
             }
             let sequenceNumber = lowerTransport.params.sequenceNumber.sequenceData();
-            if let encryptedData = sslHelper.calculateCCM(dataToEncrypt, withKey: encryptionKey, nonce: nonce.data, dataSize: UInt8(dataToEncrypt.count), andMICSize: micSize) {
+            if let encryptedData = sslHelper.calculateCCM(dataToEncrypt, withKey: encryptionKey, nonce: nonce.data, dataSize: UInt16(dataToEncrypt.count), andMICSize: micSize) {
               if let obfuscatedPDU = sslHelper.obfuscateENCPDU(encryptedData, cTLTTLValue: ctlTtl, sequenceNumber: sequenceNumber, ivIndex: lowerTransport.params.ivIndex, privacyKey: privacyKey, andsrcAddr: lowerTransport.params.sourceAddress) {
                     var aNetworkPDU = Data()
                     aNetworkPDU.append(iviNid)

@@ -165,7 +165,7 @@ Upper Transport Layer could not find key
           Nonce: \(params!.nonce.data.hexString())
         """
 
-        let result = sslHelper.calculateCCM(params!.payload, withKey: params!.key, nonce: params!.nonce.data, dataSize: UInt8(params!.payload.count), andMICSize: 4)!
+        let result = sslHelper.calculateCCM(params!.payload, withKey: params!.key, nonce: params!.nonce.data, dataSize: UInt16(params!.payload.count), andMICSize: 4)!
 
         print("""
         \(debugInfo)
@@ -184,7 +184,7 @@ Upper Transport Layer could not find key
           Nonce: \(params!.nonce.data.hexString())
         """
 
-        let result = sslHelper.calculateCCM(params!.payload, withKey: params!.key, nonce: params!.nonce.data, dataSize: UInt8(params!.payload.count), andMICSize: 4)!
+        let result = sslHelper.calculateCCM(params!.payload, withKey: params!.key, nonce: params!.nonce.data, dataSize: UInt16(params!.payload.count), andMICSize: 4)!
 
         print("""
         \(debugInfo)

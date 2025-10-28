@@ -59,7 +59,7 @@
     return [[NSData alloc] initWithBytes:outbuf length:16];
 }
 
-- (NSData*) calculateCCM: (NSData*) someData withKey:(NSData*) aKey nonce:(NSData *) aNonce dataSize:(UInt8) aSize andMICSize:(UInt8) aMICSize {
+- (NSData*) calculateCCM: (NSData*) someData withKey:(NSData*) aKey nonce:(NSData *) aNonce dataSize:(UInt16) aSize andMICSize:(UInt8) aMICSize {
     int outlen = 0;
     int mic_size = aMICSize;
     unsigned char outbuf[aSize + mic_size]; //octets for Encrypted data + octets for TAG (MIC)
@@ -88,20 +88,20 @@
     [privacyRandomSource appendData:anENCPDUData];
     NSData* privacyRandom = [privacyRandomSource subdataWithRange:NSMakeRange(0, 7)];
     NSMutableData* pecbInputs = [[NSMutableData alloc] init];
-    
+
     //Pad
     const char byteArray[] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
     NSData* padding = [[NSData alloc] initWithBytes:byteArray length:5];
     [pecbInputs appendData:padding];
     [pecbInputs appendData:anIVIndex];
     [pecbInputs appendData:privacyRandom];
-    
+
     NSData* pecb = [[self calculateECB:pecbInputs andKey:aPrivacyKey] subdataWithRange:NSMakeRange(0, 6)];
     NSMutableData* dataToObfuscate = [[NSMutableData alloc] init];
     [dataToObfuscate appendData:aCTLTTLValue];
     [dataToObfuscate appendData:aSeq];
     [dataToObfuscate appendData:aSrc];
-    
+
     NSData* obfuscatedData = [self xor:dataToObfuscate withData:pecb];
     return obfuscatedData;
 }
@@ -117,9 +117,9 @@
     [pecbInputs appendData:padding];
     [pecbInputs appendData:anIVIndex];
     [pecbInputs appendData:privacyRandom];
-    
+
     NSData* pecb = [[self calculateECB:pecbInputs andKey:aPrivacyKey] subdataWithRange:NSMakeRange(0, 6)];
-    
+
     //DeobfuscatedData = CTL, TTL, SEQ, SRC
     NSData* deobfuscatedData = [self xor:obfuscatedData withData:pecb];
     return deobfuscatedData;
@@ -128,16 +128,16 @@
 - (NSData*) calculateDecryptedCCM:(NSData *)someData withKey:(NSData *)aKey nonce:(NSData *)aNonce dataSize:(UInt8)aSize andMIC:(NSData*)aMIC {
     int outlen;
     unsigned char outbuf[1024];
-    
+
     int micLength = (int)[aMIC length] / sizeof(unsigned char);
     int messageLength = (int)[someData length] / sizeof(unsigned char);
     int nonceLength = (int) [aNonce length] / sizeof(unsigned char);
-    
+
     unsigned char* keyBytes     = (unsigned char*)[aKey bytes];
     unsigned char* nonceBytes   = (unsigned char*)[aNonce bytes];
     unsigned char* messageBytes = (unsigned char*)[someData bytes];
     unsigned char* micBytes     = (unsigned char*)[aMIC bytes];
-    
+
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     EVP_DecryptInit_ex(ctx, EVP_aes_128_ccm(), NULL, NULL, NULL);
     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, nonceLength, NULL);
@@ -172,16 +172,16 @@ static inline char itoh(int i) {
 - (NSString*) NSDataToHex: (NSData *)data {
     NSUInteger i, len;
     unsigned char *buf, *bytes;
-    
+
     len = data.length;
     bytes = (unsigned char*)data.bytes;
     buf = malloc(len*2);
-    
+
     for (i=0; i<len; i++) {
         buf[i*2] = itoh((bytes[i] >> 4) & 0xF);
         buf[i*2+1] = itoh(bytes[i] & 0xF);
     }
-    
+
     return [[NSString alloc] initWithBytesNoCopy:buf
                                           length:len*2
                                         encoding:NSASCIIStringEncoding
@@ -197,11 +197,11 @@ static inline char itoh(int i) {
 //    NSLog(@"s1 %@", [self NSDataToHex: s1]);
     NSData* t = [self calculateCMAC:anNValue andKey:s1];
 //    NSLog(@"t %@", [self NSDataToHex: t]);
-    
+
     const unsigned char* pBytes = [aPValue bytes];
     //Create T1 => (T0 || P || 0x01)
     NSMutableData *t1Inputs = [[NSMutableData alloc] init];
-    
+
     [t1Inputs appendBytes:pBytes length:1];
     uint8_t one = 1;
     [t1Inputs appendBytes:&one length:1];
@@ -214,28 +214,28 @@ static inline char itoh(int i) {
     [t2Inputs appendBytes:pBytes length:aPValue.length];
     uint8_t two = 0x02;
     [t2Inputs appendBytes:&two length:1];
-    
+
 //    NSLog(@"t2in %@", [self NSDataToHex: t2Inputs]);
     NSData* t2 = [self calculateCMAC:t2Inputs andKey:t];
 //    NSLog(@"t2 %@", [self NSDataToHex: t2]);
-    
+
     //Create T3 => (T2 || P || 0x03)
     NSMutableData *t3Inputs = [[NSMutableData alloc] init];
     [t3Inputs appendData:t2];
     [t3Inputs appendBytes:pBytes length:aPValue.length];
     uint8_t three = 0x03;
     [t3Inputs appendBytes:&three length:1];
-    
+
 //    NSLog(@"t3in %@", [self NSDataToHex: t3Inputs]);
     NSData* t3 = [self calculateCMAC:t3Inputs andKey:t];
 //    NSLog(@"t3 %@", [self NSDataToHex: t3]);
-    
+
     NSMutableData* finalData = [[NSMutableData alloc] init];
     [finalData appendData:t1];
     [finalData appendData:t2];
     [finalData appendData:t3];
 //    NSLog(@"finalData %@", [self NSDataToHex: finalData]);
-    
+
     //data mod 2^264 (keeps last 14 bytes + 7 bits), as per K2 spec.
     const unsigned char* dataPtr = [finalData bytes];
     //We need only the first 7 bits from first octet, bitmask bit0 off
@@ -243,13 +243,13 @@ static inline char itoh(int i) {
     //Then get the rest of the data up to the 16th octet
     finalData = (NSMutableData*)[finalData subdataWithRange: NSMakeRange(16, [finalData length] - 16)];
 //    NSLog(@"rest %@", [self NSDataToHex: finalData]);
-    
+
     //and concat the first octet with the chunked data, this is equivalent to removing first 15 octets - 7 bits)
     NSMutableData* output = [[NSMutableData alloc] init];
     [output appendBytes:&firstOffset length:1];
     [output appendData:finalData];
 //    NSLog(@"output %@", [self NSDataToHex: output]);
-    
+
     return output;
 }
 
@@ -261,12 +261,12 @@ static inline char itoh(int i) {
     NSData* aSaltValue = [self calculateSalt:saltInputData];
     //T is calculated first using AES-CMAC N with SALT
     NSData* t = [self calculateCMAC: anNValue andKey: aSaltValue];
-    
+
     //id64 ascii => 0x69 0x64 0x36 0x34 || 0x01
     const char cmacInput[] = { 0x69, 0x64, 0x36, 0x34, 0x01 }; //id64 string. || 0x01
     NSData* cmacInputData = [[NSData alloc] initWithBytes:cmacInput length:5];
     NSData* finalData = [self calculateCMAC:cmacInputData andKey:t];
-    
+
     //data mod 2^64 (keeps last 64 bits), as per K3 spec.
     NSData *output = (NSMutableData*)[finalData subdataWithRange: NSMakeRange(8, [finalData length] - 8)];
     return output;
@@ -280,12 +280,12 @@ static inline char itoh(int i) {
     NSData* aSaltValue = [self calculateSalt:saltInputData];
     //T is calculated first using AES-CMAC N with SALT
     NSData* t = [self calculateCMAC: anNValue andKey: aSaltValue];
-    
+
     //id64 ascii => 0x69 0x64 0x36 || 0x01
     const char cmacInput[] = { 0x69, 0x64, 0x36, 0x01 }; //id6 string. || 0x01
     NSData* cmacInputData = [[NSData alloc] initWithBytes:cmacInput length:4];
     NSData* finalData = [self calculateCMAC:cmacInputData andKey:t];
-    
+
     //data mod 2^6 (keeps last 6 bits), as per K4 spec.
     const unsigned char* dataPtr = [finalData bytes];
     //We need only the last 6 bits from the octet, bitmask bit0 and bit1 off
