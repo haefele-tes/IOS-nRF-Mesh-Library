@@ -85,7 +85,7 @@ public struct NetworkLayer {
         guard let decryptedNetworkPDU = sslHelper.calculateDecryptedCCM(encryptedNetworkPDU,
                                                                         withKey: encryptionKey,
                                                                         nonce: nonceData,
-                                                                        dataSize: UInt8(encryptedNetworkPDU.count), andMIC: netMic),
+                                                                        andMIC: netMic),
               decryptedNetworkPDU.count >= 2 else {
             print("Network Layer: Failed to decrypt PDU or decrypted PDU too short")
             return nil

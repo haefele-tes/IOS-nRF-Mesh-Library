@@ -125,7 +125,7 @@
     return deobfuscatedData;
 }
 
-- (NSData*) calculateDecryptedCCM:(NSData *)someData withKey:(NSData *)aKey nonce:(NSData *)aNonce dataSize:(UInt8)aSize andMIC:(NSData*)aMIC {
+- (NSData*) calculateDecryptedCCM:(NSData *)someData withKey:(NSData *)aKey nonce:(NSData *)aNonce andMIC:(NSData*)aMIC {
     int outlen;
     unsigned char outbuf[1024];
 

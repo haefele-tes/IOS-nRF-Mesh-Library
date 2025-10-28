@@ -61,7 +61,7 @@ Upper Transport Layer could not find key
             let dataSize = aPDU.count - micLen
             let pduData = aPDU[0..<dataSize]
             let mic = aPDU[aPDU.count - micLen..<aPDU.count]
-            if let decryptedData = sslHelper.calculateDecryptedCCM(pduData, withKey: key, nonce: nonce.data, dataSize: 0, andMIC: mic) {
+            if let decryptedData = sslHelper.calculateDecryptedCCM(pduData, withKey: key, nonce: nonce.data, andMIC: mic) {
                 decryptedPayload = Data(decryptedData)
             } else {
                 print("upper Decryption failed")
