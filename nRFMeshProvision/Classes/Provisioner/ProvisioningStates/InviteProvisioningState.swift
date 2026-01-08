@@ -69,12 +69,12 @@ class InviteProvisioningState: NSObject, ProvisioningStateProtocol {
             }
             print("Received capabilities provisioning message")
             let elementCount            = Int(data[2])
-            let algorithm               = ProvisioningAlgorithm(rawValue: UInt16(data[3] << 0xFF) + UInt16(data[4] & 0x00FF))!
+            let algorithm               = ProvisioningAlgorithm(rawValue: (UInt16(data[3]) << 8) | UInt16(data[4]))
             let pubKeyType              = PublicKeyInformationAvailability(rawValue: data[5])!
             let staticOOBType           = StaticOutOfBoundInformationAvailability(rawValue: data[6])!
             let outputOOBSize           = data[7]
-            let supportedOutputActions  = OutputOutOfBoundActions.calculateOutputActionsFromBitMask(aBitMask: UInt16(data[8] << 0xFF) + UInt16(data[9] & 0x00FF))
-            let supportedInputActions   = InputOutOfBoundActions.calculateInputActionsFromBitmask(aBitMask: UInt16(data[11] << 0xFF) + UInt16(data[12] & 0x00FF))
+            let supportedOutputActions  = OutputOutOfBoundActions.calculateOutputActionsFromBitMask(aBitMask: (UInt16(data[8]) << 8) | UInt16(data[9]))
+            let supportedInputActions   = InputOutOfBoundActions.calculateInputActionsFromBitmask(aBitMask: (UInt16(data[11]) << 8) | UInt16(data[12]))
             let inputOOBSize            = data[10]
             print("Element count: \(elementCount),Algorithm: \(algorithm), PublicKeyAvailable: \(pubKeyType), StaticOOBAvailable: \(staticOOBType), OutputOOBSize: \(outputOOBSize), InputOOBSize: \(inputOOBSize)")
             if supportedOutputActions.count == 0 {

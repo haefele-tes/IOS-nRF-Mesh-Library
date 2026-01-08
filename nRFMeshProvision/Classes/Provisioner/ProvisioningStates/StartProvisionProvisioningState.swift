@@ -40,8 +40,10 @@ class StartProvisionProvisioningState: NSObject, ProvisioningStateProtocol {
 
     func execute() {
         if let inviteCapabilities = inviteCapabilities {
-            guard inviteCapabilities.algorithm == .fipsp256EllipticCurve else {
-                print("Error: Unsupported algorithm, only supported algorithm is FIPS P-256 Elliptic curve")
+            // Check if Mesh 1.0 algorithm is supported (prefer it for compatibility)
+            // The algorithm field is a bitmask: bit 0 = Mesh 1.0, bit 1 = Mesh 1.1
+            guard inviteCapabilities.algorithm.supportsMesh10Algorithm else {
+                print("Error: Unsupported algorithm, device must support FIPS P-256 Elliptic curve (Mesh 1.0)")
                 return
             }
 
