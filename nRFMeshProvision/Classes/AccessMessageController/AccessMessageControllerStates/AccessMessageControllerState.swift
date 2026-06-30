@@ -131,6 +131,10 @@ class AccessMessageControllerState: NSObject, GenericModelControllerStateProtoco
 
         if incomingData[0] == 0x01 {
             print("Secure beacon: \(incomingData.hexString())")
+            // Route beacons to the delegate during active message exchange too (not just
+            // SleepConfiguratorState), so IV-index recovery keeps working while sending/retrying.
+            let strippedOpcode = Data(incomingData.dropFirst())
+            target.delegate?.receivedSecureBeacon(strippedOpcode)
         } else {
             let strippedOpcode = Data(incomingData.dropFirst())
             if let result = networkLayer.incomingPDU(strippedOpcode, withRawAccess: true) {
